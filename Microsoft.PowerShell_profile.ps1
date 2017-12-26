@@ -5,13 +5,15 @@ function pwd_as_linux {
 # File-Hash を取得する
 function Get-File-Sha1Hashes {
     $files = Get-ChildItem -Force
-    foreach($file in $files){
-        if($file.Extension -eq ".sha1"){
+    foreach ($file in $files) {
+        if ($file.Extension -eq ".sha1") {
             continue
         }
-        if(!$file.PSIsContainer){
-        Get-FileHash $file -Algorithm SHA1 | Out-File -FilePath ($file.Name + ".sha1") -Encoding utf8
+        if (!$file.PSIsContainer) {
+            Get-FileHash $file -Algorithm SHA1 | Out-File -FilePath ($file.Name + ".sha1") -Encoding utf8
         }
     }
 }
+Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\bf783d2a5378f32dbacb40d8897e7942\profile.ps1'
+Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\3d4be89cdd501d815e8ab03268bbb41c\profile.ps1'
 Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\posh-git\src\posh-git.psd1'
