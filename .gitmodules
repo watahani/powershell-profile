@@ -4,6 +4,6 @@
 [submodule "3d4be89cdd501d815e8ab03268bbb41c"]
 	path = 3d4be89cdd501d815e8ab03268bbb41c
 	url = https://gist.github.com/3d4be89cdd501d815e8ab03268bbb41c.git
-[submodule ".\\bf783d2a5378f32dbacb40d8897e7942"]
-	path = .\\bf783d2a5378f32dbacb40d8897e7942
+[submodule "bf783d2a5378f32dbacb40d8897e7942"]
+	path = bf783d2a5378f32dbacb40d8897e7942
 	url = https://gist.github.com/bf783d2a5378f32dbacb40d8897e7942.git
