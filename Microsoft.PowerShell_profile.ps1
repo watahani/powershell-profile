@@ -14,6 +14,7 @@ function Get-File-Sha1Hashes {
         }
     }
 }
-Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\bf783d2a5378f32dbacb40d8897e7942\profile.ps1'
-Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\3d4be89cdd501d815e8ab03268bbb41c\profile.ps1'
-Import-Module 'C:\Users\HANIYAMA\Documents\WindowsPowerShell\posh-git\src\posh-git.psd1'
+$ProfileFolder = Split-Path $profile
+Import-Module $ProfileFolder\bf783d2a5378f32dbacb40d8897e7942\profile.ps1
+Import-Module $ProfileFolder\3d4be89cdd501d815e8ab03268bbb41c\profile.ps1
+Import-Module $ProfileFolder\posh-git\src\posh-git.psd1
