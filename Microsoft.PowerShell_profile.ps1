@@ -10,7 +10,7 @@ function Get-File-Sha1Hashes {
             continue
         }
         if (!$file.PSIsContainer) {
-            Get-FileHash $file -Algorithm SHA1 | Out-File -FilePath ($file.Name + ".sha1") -Encoding utf8
+            $(Get-FileHash $file -Algorithm SHA1).Hash | Out-File -FilePath ($file.Name + ".sha1") -Encoding utf8
         }
     }
 }
@@ -18,3 +18,4 @@ $ProfileFolder = Split-Path $profile
 Import-Module $ProfileFolder\bf783d2a5378f32dbacb40d8897e7942\profile.ps1
 Import-Module $ProfileFolder\3d4be89cdd501d815e8ab03268bbb41c\profile.ps1
 Import-Module $ProfileFolder\posh-git\src\posh-git.psd1
+try { $null = gcm pshazz -ea stop; pshazz init 'default' } catch { }
