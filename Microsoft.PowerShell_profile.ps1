@@ -42,5 +42,6 @@ function Decode-Base64($base64){
 $ProfileFolder = Split-Path $profile
 Import-Module $ProfileFolder\bf783d2a5378f32dbacb40d8897e7942\profile.ps1
 Import-Module $ProfileFolder\3d4be89cdd501d815e8ab03268bbb41c\profile.ps1
-Import-Module $ProfileFolder\posh-git\src\posh-git.psd1
-try { $null = gcm pshazz -ea stop; pshazz init } catch { }
+Import-MOdule $ProfileFolder\1940fec5e9cdffb30c01e18e38ff4532\YubiKeyTools.ps1
+# Import-Module $ProfileFolder\posh-git\src\posh-git.psd1
+try { $null = gcm pshazz -ea stop; pshazz init 'default' } catch { }
