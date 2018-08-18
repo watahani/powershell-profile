@@ -19,3 +19,6 @@
 [submodule "setenv"]
 	path = setenv
 	url = https://gist.github.com/bf783d2a5378f32dbacb40d8897e7942.git
+[submodule "yubikey-tool"]
+	path = yubikey-tool
+	url = https://gist.github.com/1940fec5e9cdffb30c01e18e38ff4532.git
