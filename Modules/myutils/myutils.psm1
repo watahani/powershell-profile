@@ -85,7 +85,7 @@ function Decode-Base64Url {
     )
     process {
         $missingCharacters = 4 - $base64Url.Length % 4
-        if($missingCharacters -lt 4)
+        if($missingCharacters -gt 0)
         {
             $missingString = New-Object System.String -ArgumentList @( '=', $missingCharacters )
             $base64Url = $base64Url + $missingString       
