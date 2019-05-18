@@ -12,7 +12,7 @@ PS> git submodule update -i
 or
 
 ```powershell
-PS> git clone -recursive https://github.com/watahani/powershell-profile $(Split-Path $profile)
+PS> git clone --recursive https://github.com/watahani/powershell-profile $(Split-Path $profile)
 ```
 
 ## pshazz
