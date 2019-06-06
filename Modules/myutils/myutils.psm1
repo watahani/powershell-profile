@@ -97,4 +97,35 @@ function Decode-Base64Url {
     }
 }
 
+function Switch-AzureADModule {
+    $profilePath = $(Split-Path $PROFILE)
+    $azureADModule = Get-Module -Name AzureADPreview
+    if(-not $azureADModule){
+        $azureADModule = Get-Module -Name AzureAD
+    }
+    if($azureADModule){
+        $version = $azureADModule.Name
+        Remove-Module -Name $version
+    }else{
+        $version = "AzureADPreview"
+    }
+
+
+    switch ($version) {
+        "AzureADPreview" {
+            $modulePath = Join-Path $profilePath "AzureAD"
+            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            $modulePath = Join-Path $modulePath.FullName "AzureAD.psd1"
+        }
+        "AzureAD" {
+            $modulePath = Join-Path $profilePath "AzureADPreview"
+            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            $modulePath = Join-Path $modulePath.FullName "AzureADPreview.psd1"
+        }
+        Default {}
+    }
+    Write-Host "Import Module from $modulePath"
+    Import-Module $modulePath
+}
+
 Export-ModuleMember -Function *
