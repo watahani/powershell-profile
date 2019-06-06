@@ -125,7 +125,7 @@ function Switch-AzureADModule {
         Default {}
     }
     Write-Host "Import Module from $modulePath"
-    Import-Module $modulePath
+    Import-Module $modulePath -Global
 }
 
 Export-ModuleMember -Function *
