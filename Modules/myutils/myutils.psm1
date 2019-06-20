@@ -20,7 +20,7 @@ function Get-File-Sha1Hashes {
 }
 
 # Check Command Enable
-function Test-Command-Enable{
+function Test-Command-Enable {
     [OutputType([String])]
     param(
         [String]$command
@@ -38,7 +38,7 @@ function Test-Command-Enable{
 function Encode-Base64 {
     [OutputType([String])]
     param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$plainText
     )
     process {
@@ -52,7 +52,7 @@ function Encode-Base64 {
 function Decode-Base64 {
     [OutputType([String])]
     param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$base64String
     )
     process {
@@ -66,7 +66,7 @@ function Decode-Base64 {
 function Encode-Base64Url {
     [OutputType([String])]
     param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$plainText
     )
     process {
@@ -80,13 +80,12 @@ function Encode-Base64Url {
 function Decode-Base64Url {
     [OutputType([String])]
     param(
-        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$base64Url
     )
     process {
         $missingCharacters = (4 - $base64Url.Length % 4) % 4
-        if($missingCharacters -gt 0)
-        {
+        if ($missingCharacters -gt 0) {
             $missingString = New-Object System.String -ArgumentList @( '=', $missingCharacters )
             $base64Url = $base64Url + $missingString       
         }
@@ -98,31 +97,41 @@ function Decode-Base64Url {
 }
 
 function Switch-AzureADModule {
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $false)]
+        [ValidateSet("AzureAD" , "AzureADPreview")]$version
+    )
     $profilePath = $(Split-Path $PROFILE)
     $azureADModule = Get-Module -Name AzureADPreview
-    if(-not $azureADModule){
+    if (-not $azureADModule) {
         $azureADModule = Get-Module -Name AzureAD
     }
-    if($azureADModule){
-        $version = $azureADModule.Name
-        Remove-Module -Name $version
-    }else{
-        $version = "AzureADPreview"
+
+    if ($azureADModule) {
+        $currentVersion = $azureADModule.Name
+        Remove-Module -Name $currentVersion
+        $selectedVersion = if ($currentVersion -eq "AzureAD") { Write-Output "AzureADPreview" }else { Write-Output "AzureAD" }
+    }
+    else {
+        $selectedVersion = "AzureAD"
     }
 
+    if($version){
+        $selectedVersion = $version
+    }
 
-    switch ($version) {
-        "AzureADPreview" {
+    switch ($selectedVersion) {
+        "AzureAD" {
             $modulePath = Join-Path $profilePath "AzureAD"
             $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
             $modulePath = Join-Path $modulePath.FullName "AzureAD.psd1"
         }
-        "AzureAD" {
+        "AzureADPreview" {
             $modulePath = Join-Path $profilePath "AzureADPreview"
             $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
             $modulePath = Join-Path $modulePath.FullName "AzureADPreview.psd1"
         }
-        Default {}
+        Default { }
     }
     Write-Host "Import Module from $modulePath"
     Import-Module $modulePath -Global
