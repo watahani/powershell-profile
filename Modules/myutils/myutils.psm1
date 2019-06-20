@@ -116,7 +116,7 @@ function Switch-AzureADModule {
         $selectedVersion = "AzureAD"
     }
 
-    if($version){
+    if ($version) {
         $selectedVersion = $version
     }
 
@@ -135,6 +135,25 @@ function Switch-AzureADModule {
     }
     Write-Host "Import Module from $modulePath"
     Import-Module $modulePath -Global
+}
+
+function Show-Tooltip {
+    param(
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [string]$body, 
+        [int]$timeout = 1, 
+        [string]$tilte = "notify", 
+        [ValidateSet("Error", "Info", "None", "Warning")]$toolTipIcon = "Info"
+    )
+    process{
+        [Void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+        $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
+        $powerShellExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+        $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($powerShellExe)
+        $notifyIcon.Icon = $icon
+        $notifyIcon.Visible = $true
+        $notifyIcon.ShowBalloonTip($timeout, $tilte, $body, $toolTipIcon)        
+    }
 }
 
 Export-ModuleMember -Function *
