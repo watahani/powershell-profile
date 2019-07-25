@@ -139,13 +139,13 @@ function Switch-AzureADModule {
 
 function Show-Tooltip {
     param(
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$body, 
         [int]$timeout = 1, 
         [string]$tilte = "notify", 
         [ValidateSet("Error", "Info", "None", "Warning")]$toolTipIcon = "Info"
     )
-    process{
+    process {
         [Void][System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
         $notifyIcon = New-Object System.Windows.Forms.NotifyIcon
         $powerShellExe = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
@@ -153,6 +153,33 @@ function Show-Tooltip {
         $notifyIcon.Icon = $icon
         $notifyIcon.Visible = $true
         $notifyIcon.ShowBalloonTip($timeout, $tilte, $body, $toolTipIcon)        
+    }
+}
+
+function Start-Periodic-Notify {
+    param(
+        [int]$timespan = 60,
+        [string]$message = "time notify",
+        [int]$notifyTimes = 0,
+        [bool]$notify = $true
+    )
+    process {
+        $notifyCount = 0
+        $startDate = Get-Date
+        $notifyDate = $startDate.AddSeconds(0)        
+        while ($true) {
+            $spendTime = $($notifyDate - $startDate).ToString()
+            Write-Host "$message ($notifyCount): $spendTime "
+            if ($notify) {
+                Write-Host "$message ($notifyCount): $spendTime " | Show-Tooltip
+            }
+            $notifyCount ++
+            $notifyDate = $notifyDate.AddSeconds($timespan)
+            if ($notifyTimes -ne 0 -and ($notifyCount -ge $notifyTimes)) {
+                break;
+            }
+            Write-Host $($notifyDate - $(Get-Date)).TotalSeconds
+        }
     }
 }
 
