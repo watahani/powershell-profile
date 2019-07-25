@@ -171,7 +171,7 @@ function Start-Periodic-Notify {
             $spendTime = $($notifyDate - $startDate).ToString()
             Write-Host "$message ($notifyCount): $spendTime "
             if ($notify) {
-                Write-Host "$message ($notifyCount): $spendTime " | Show-Tooltip
+                Write-Output "$message ($notifyCount): $spendTime " | Show-Tooltip
             }
             $notifyCount ++
             $notifyDate = $notifyDate.AddSeconds($timespan)
