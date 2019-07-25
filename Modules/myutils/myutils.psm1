@@ -178,7 +178,7 @@ function Start-Periodic-Notify {
             if ($notifyTimes -ne 0 -and ($notifyCount -ge $notifyTimes)) {
                 break;
             }
-            Write-Host $($notifyDate - $(Get-Date)).TotalSeconds
+            Start-Sleep $($notifyDate - $(Get-Date)).TotalSeconds
         }
     }
 }
