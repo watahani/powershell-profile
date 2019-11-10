@@ -109,6 +109,7 @@ function Switch-AzureADModule {
 
     if ($azureADModule) {
         $currentVersion = $azureADModule.Name
+        Write-Host "Remove-Module $currentVersion"
         Remove-Module -Name $currentVersion
         $selectedVersion = if ($currentVersion -eq "AzureAD") { Write-Output "AzureADPreview" }else { Write-Output "AzureAD" }
     }
@@ -137,6 +138,47 @@ function Switch-AzureADModule {
     Import-Module $modulePath -Global
 }
 
+function Switch-AzureResourceModule {
+    param(
+        [Parameter(Mandatory = $false, ValueFromPipeline = $false)]
+        [ValidateSet("Az" , "AzureRM")]$version
+    )
+    $profilePath = $(Split-Path $PROFILE)
+    $AzureResourceModule = Get-Module -Name AzureRM
+    if (-not $AzureResourceModule) {
+        $AzureResourceModule = Get-Module -Name Az
+    }
+
+    if ($AzureResourceModule) {
+        $currentVersion = $AzureResourceModule.Name
+        Write-Host "Remove-Module $currentVersion"
+        Remove-Module -Name $currentVersion
+        $selectedVersion = if ($currentVersion -eq "Az") { Write-Output "AzureRM" }else { Write-Output "Az" }
+    }
+    else {
+        $selectedVersion = "Az"
+    }
+
+    if ($version) {
+        $selectedVersion = $version
+    }
+
+    switch ($selectedVersion) {
+        "Az" {
+            $modulePath = Join-Path $profilePath "AzModules\Az"
+            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            $modulePath = Join-Path $modulePath.FullName "Az.psd1"
+        }
+        "AzureRM" {
+            $modulePath = Join-Path $profilePath "AzureRMModules\AzureRM"
+            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            $modulePath = Join-Path $modulePath.FullName "AzureRM.psd1"
+        }
+        Default { }
+    }
+    Write-Host "Import Module from $modulePath"
+    Import-Module $modulePath -Global
+}
 function Show-Tooltip {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]

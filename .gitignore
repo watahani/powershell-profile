@@ -1,3 +1,5 @@
 AzureAD
 AzureADPreview
 Modules/private_utils/
+AzModules
+AzureRMModules
