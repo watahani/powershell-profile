@@ -151,8 +151,9 @@ function Switch-AzureResourceModule {
 
     if ($AzureResourceModule) {
         $currentVersion = $AzureResourceModule.Name
-        Write-Host "Remove-Module $currentVersion"
+        Write-Host "Remove-Module $currentVersion and $currentVersion.*"
         Remove-Module -Name $currentVersion
+        Remove-Module -Name "$currentVersion.*"
         $selectedVersion = if ($currentVersion -eq "Az") { Write-Output "AzureRM" }else { Write-Output "Az" }
     }
     else {
@@ -223,6 +224,44 @@ function Start-Periodic-Notify {
             Start-Sleep $($notifyDate - $(Get-Date)).TotalSeconds
         }
     }
+}
+
+function Switch-MyVirtualVmSize {
+    # Name of the resource group that contains the VM
+    $rgName = 'wahaniya-dev'
+
+    # Choose between Standard_LRS and Premium_LRS based on your scenario
+    $storageType = 'Standard_LRS'
+
+    # Premium capable size
+    # Required only if converting storage from Standard to Premium
+    $size = 'Standard_DS1_v2'
+
+    # Stop and deallocate the VM before changing the size
+    Stop-AzVM -ResourceGroupName $rgName -Name $vmName -Force
+
+    $vms = Get-AzVM -resourceGroupName $rgName
+
+    # Change the VM size to a size that supports Premium storage
+    # Skip this step if converting storage from Premium to Standard
+    foreach ($vm in $vms) {
+        $vm.HardwareProfile.VmSize = $size
+        Update-AzVM -VM $vm -ResourceGroupName $rgName
+    }
+
+    # Get all disks in the resource group of the VM
+    $vmDisks = Get-AzDisk -ResourceGroupName $rgName 
+
+    # For disks that belong to the selected VM, convert to Premium storage
+    foreach ($disk in $vmDisks) {
+        if ($($vms | ForEach-Object{ $_.Id } ) -contains $disk.ManagedBy) {
+            $diskUpdateConfig = New-AzDiskUpdateConfig –AccountType $storageType
+            Update-AzDisk -DiskUpdate $diskUpdateConfig -ResourceGroupName $rgName `
+                -DiskName $disk.Name
+        }
+    }
+
+    Start-AzVM -ResourceGroupName $rgName -Name $vmName
 }
 
 Export-ModuleMember -Function *
