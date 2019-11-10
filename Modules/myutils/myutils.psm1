@@ -226,42 +226,44 @@ function Start-Periodic-Notify {
     }
 }
 
-function Switch-MyVirtualVmSize {
-    # Name of the resource group that contains the VM
-    $rgName = 'wahaniya-dev'
+function Set-MyVirtualVmSize {
+    param(
+        [ValidateSet(
+            "Standard_DS1_v2", 
+            "Standard_DS2_v2"
+        )]$size = "Standard_DS1_v2",
+        [ValidateSet(
+            "Standard_LRS",
+            "StandardSSD_LRS", 
+            "Premium_LRS"
+        )]$storageType = 'Standard_LRS',
+        [string]$rgName = 'wahaniya-dev'
+    )
+    process {
+        $vms = Get-AzVM -resourceGroupName $rgName
 
-    # Choose between Standard_LRS and Premium_LRS based on your scenario
-    $storageType = 'Standard_LRS'
+        # Stop and deallocate the VM before changing the size
+        $vms | Stop-AzVM -Force
 
-    # Premium capable size
-    # Required only if converting storage from Standard to Premium
-    $size = 'Standard_DS1_v2'
+        # Change the VM size to a size that supports Premium storage
+        # Skip this step if converting storage from Premium to Standard
+        foreach ($vm in $vms) {
+            $vm.HardwareProfile.VmSize = $size
+            Update-AzVM -VM $vm -ResourceGroupName $rgName
+        }
 
-    # Stop and deallocate the VM before changing the size
-    Stop-AzVM -ResourceGroupName $rgName -Name $vmName -Force
+        # Get all disks in the resource group of the VM
+        $vmDisks = Get-AzDisk -ResourceGroupName $rgName 
 
-    $vms = Get-AzVM -resourceGroupName $rgName
-
-    # Change the VM size to a size that supports Premium storage
-    # Skip this step if converting storage from Premium to Standard
-    foreach ($vm in $vms) {
-        $vm.HardwareProfile.VmSize = $size
-        Update-AzVM -VM $vm -ResourceGroupName $rgName
-    }
-
-    # Get all disks in the resource group of the VM
-    $vmDisks = Get-AzDisk -ResourceGroupName $rgName 
-
-    # For disks that belong to the selected VM, convert to Premium storage
-    foreach ($disk in $vmDisks) {
-        if ($($vms | ForEach-Object{ $_.Id } ) -contains $disk.ManagedBy) {
-            $diskUpdateConfig = New-AzDiskUpdateConfig –AccountType $storageType
-            Update-AzDisk -DiskUpdate $diskUpdateConfig -ResourceGroupName $rgName `
-                -DiskName $disk.Name
+        # For disks that belong to the selected VM, convert to Premium storage
+        foreach ($disk in $vmDisks) {
+            if ($($vms | ForEach-Object { $_.Id } ) -contains $disk.ManagedBy) {
+                $diskUpdateConfig = New-AzDiskUpdateConfig -AccountType $storageType
+                Update-AzDisk -DiskUpdate $diskUpdateConfig -ResourceGroupName $rgName `
+                    -DiskName $disk.Name
+            }
         }
     }
-
-    Start-AzVM -ResourceGroupName $rgName -Name $vmName
 }
 
 Export-ModuleMember -Function *
