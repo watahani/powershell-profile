@@ -237,9 +237,15 @@ function Set-MyVirtualVmSize {
             "StandardSSD_LRS", 
             "Premium_LRS"
         )]$storageType = 'Standard_LRS',
-        [string]$rgName = 'wahaniya-dev'
+        [string]$rgName = $env:defaultResourceGroup
     )
     process {
+        Get-Command Connect-AzAccountAsMyServicePrincipal | Out-Null
+        if ($? -eq $true) {
+            Connect-AzAccountAsMyServicePrincipal
+        } else {
+            Connect-AzAccount
+        }
         $vms = Get-AzVM -resourceGroupName $rgName
 
         # Stop and deallocate the VM before changing the size
@@ -261,6 +267,41 @@ function Set-MyVirtualVmSize {
                 $diskUpdateConfig = New-AzDiskUpdateConfig -AccountType $storageType
                 Update-AzDisk -DiskUpdate $diskUpdateConfig -ResourceGroupName $rgName `
                     -DiskName $disk.Name
+            }
+        }
+    }
+}
+
+function Start-MyVitualMachines {
+    param (
+        [string]$resourceGroup = $env:defaultResourceGroup,
+        [switch]$asJob
+    )
+    process {
+        $startTime = Get-Date
+        Get-Command Connect-AzAccountAsMyServicePrincipal | Out-Null
+        if ($? -eq $true) {
+            Connect-AzAccountAsMyServicePrincipal
+        } else {
+            Connect-AzAccount
+        }
+        $VMhasLaunched = Get-AzVM -ResourceGroupName $resourceGroup | %{ Start-AzVM -Id $_.Id  -AsJob}
+        if(-not $asJob) {
+            $VMhasLaunched | Wait-Job
+            $totalTime = $($(Get-Date) - $startTime).ToString()
+            Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
+            Write-Host "Virtual Machine has been launched in $totalTime"     
+        } else {
+            Register-ObjectEvent $VMhasLaunched -EventName "StateChanged" -SourceIdentifier JobStateChanged -Action {
+                $totalTime = $($(Get-Date) - $startTime).ToString()
+                Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
+                Write-Host "Virtual Machine has been launched in $totalTime"
+                $global:sender1 = $sender
+                $global:event1 = $Event
+                $global:subscriber = $EventSubscriber
+                $global:source = $SourceEventArgs
+                $global:SourceArgs1 = $SourceArgs
+                Unregister-Event -SourceIdentifier JobStateChanged         
             }
         }
     }
