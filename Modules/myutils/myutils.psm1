@@ -240,11 +240,20 @@ function Set-MyVirtualVmSize {
         [string]$rgName = $env:defaultResourceGroup
     )
     process {
-        Get-Command Connect-AzAccountAsMyServicePrincipal | Out-Null
+        if (-not $(Get-Module Az.Accounts)){
+            Write-Error "Az Module Not Found. Please Install Az Module 'Install-Module -Name Az'"
+            return
+        }
+
+        Get-Command Connect-AzAccountAsMyServicePrincipal -ea SilentlyContinue | Out-Null
         if ($? -eq $true) {
             Connect-AzAccountAsMyServicePrincipal
         } else {
             Connect-AzAccount
+        }
+
+        if (-not $rgName) {
+            $rgName = Read-Host "Please type resource group name"
         }
         $vms = Get-AzVM -resourceGroupName $rgName
 
@@ -278,8 +287,13 @@ function Start-MyVitualMachines {
         [switch]$asJob
     )
     process {
+        if (-not $(Get-Module Az.Accounts)){
+            Write-Error "Az Module Not Found. Please Install Az Module 'Install-Module -Name Az'"
+            return
+        }
+
         $startTime = Get-Date
-        Get-Command Connect-AzAccountAsMyServicePrincipal | Out-Null
+        Get-Command Connect-AzAccountAsMyServicePrincipal -ea SilentlyContinue | Out-Null
         if ($? -eq $true) {
             Connect-AzAccountAsMyServicePrincipal
         } else {
