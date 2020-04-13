@@ -240,15 +240,16 @@ function Set-MyVirtualVmSize {
         [string]$rgName = $env:defaultResourceGroup
     )
     process {
-        if (-not $(Get-Module Az.Accounts)){
-            Write-Error "Az Module Not Found. Please Install Az Module 'Install-Module -Name Az'"
-            return
-        }
+        # if (-not $(Get-Module Az.Accounts)) {
+        #     Write-Error "Az Module Not Found. Please Install Az Module 'Install-Module -Name Az'"
+        #     return
+        # }
 
         Get-Command Connect-AzAccountAsMyServicePrincipal -ea SilentlyContinue | Out-Null
         if ($? -eq $true) {
             Connect-AzAccountAsMyServicePrincipal
-        } else {
+        }
+        else {
             Connect-AzAccount
         }
 
@@ -281,31 +282,38 @@ function Set-MyVirtualVmSize {
     }
 }
 
-function Start-MyVitualMachines {
+function Start-MyVirtualMachines {
     param (
         [string]$resourceGroup = $env:defaultResourceGroup,
         [switch]$asJob
     )
     process {
-        if (-not $(Get-Module Az.Accounts)){
-            Write-Error "Az Module Not Found. Please Install Az Module 'Install-Module -Name Az'"
-            return
-        }
-
         $startTime = Get-Date
         Get-Command Connect-AzAccountAsMyServicePrincipal -ea SilentlyContinue | Out-Null
-        if ($? -eq $true) {
-            Connect-AzAccountAsMyServicePrincipal
-        } else {
-            Connect-AzAccount
+        try {
+            if ($? -eq $true) {
+                Connect-AzAccountAsMyServicePrincipal
+            }
+            else {
+                Connect-AzAccount
+            }
         }
-        $VMhasLaunched = Get-AzVM -ResourceGroupName $resourceGroup | %{ Start-AzVM -Id $_.Id  -AsJob}
-        if(-not $asJob) {
+        catch {
+            $_
+            return;
+        }
+        if (-not $(Get-AzResourceGroup -Name $resourceGroup)) {
+            Write-Host "Resource group not found."
+            return
+        }
+        $VMhasLaunched = Get-AzVM -ResourceGroupName $resourceGroup | % { Start-AzVM -Id $_.Id  -AsJob }
+        if (-not $asJob) {
             $VMhasLaunched | Wait-Job
             $totalTime = $($(Get-Date) - $startTime).ToString()
             Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
             Write-Host "Virtual Machine has been launched in $totalTime"     
-        } else {
+        }
+        else {
             Register-ObjectEvent $VMhasLaunched -EventName "StateChanged" -SourceIdentifier JobStateChanged -Action {
                 $totalTime = $($(Get-Date) - $startTime).ToString()
                 Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
@@ -318,6 +326,22 @@ function Start-MyVitualMachines {
                 Unregister-Event -SourceIdentifier JobStateChanged         
             }
         }
+    }
+}
+
+function Remove-EventViewerAllLogs {
+    param (
+        [switch]$confirm = $true
+    )
+    process {
+        if ($confirm) {
+            $result = Read-Host 'Delete All Saved Logs on EventViewr (y/n)';
+            if ($result -ne 'y') {
+                Write-Host 'abort!' -ForegroundColor Red
+                return;
+            }
+        }
+        Start-Process powershell.exe -ArgumentList '-Command "Remove-Item -Recurse -Force ""C:\ProgramData\Microsoft\Event Viewer\ExternalLogs\*\"""' -Verb runas -WindowStyle Hidden
     }
 }
 
