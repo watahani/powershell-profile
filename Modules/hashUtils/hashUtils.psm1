@@ -16,7 +16,7 @@ function Get-HashFromString {
         $writer.write($string)
         $writer.Flush()
         $stringAsStream.Position = 0
-        $hash = Get-FileHash -InputStream $stringAsStream | Select-Object Hash
+        $hash = Get-FileHash -InputStream $stringAsStream -Algorithm $Algorithm | Select-Object Hash
         return $hash.Hash
     }
 }
