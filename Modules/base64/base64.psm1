@@ -1,20 +1,34 @@
 
 # String To Base64
-function Encode-Base64 {
+function Convert-PlainTextToBase64 {
     [OutputType([String])]
     param(
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$plainText
     )
     process {
-        $byte = ([System.Text.Encoding]::Default).GetBytes($plainText)
-        $b64enc = [Convert]::ToBase64String($byte)
+        $bytes = ([System.Text.Encoding]::Default).GetBytes($plainText)
+        $b64enc = Convert-BytesToBase64 $bytes
         return $b64enc
     }
 }
 
+# Convert bytes to base64 string
+function Convert-BytesToBase64 {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [byte[]]$bytes
+    )
+    process {
+        $b64enc = [Convert]::ToBase64String($bytes)
+        return $b64enc
+    }
+}
+
+
 # Base64 To Plane Text 
-function Decode-Base64 {
+function Convert-Base64ToPlainText {
     [OutputType([String])]
     param(
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
@@ -28,21 +42,36 @@ function Decode-Base64 {
 }
 
 # String To Base64
-function Encode-Base64Url {
+function Convert-PlainTextToBase64Url {
     [OutputType([String])]
     param(
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [String]$plainText
     )
     process {
-        $base64string = Encode-Base64 $plainText
+        $base64string = Convert-PlainTextToBase64 $plainText
         $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
         return $base64Url
     }
 }
 
+# String To Base64
+function Convert-BytesToBase64Url {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [byte[]]$bytes
+    )
+    process {
+        $base64string = Convert-BytesToBase64 $bytes
+        $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return $base64Url
+    }
+}
+
+
 # Base64 To Plane Text 
-function Decode-Base64Url {
+function Convert-Base64UrlToPlainText {
     [OutputType([String])]
     param(
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
@@ -55,8 +84,7 @@ function Decode-Base64Url {
             $base64Url = $base64Url + $missingString       
         }
         $base64String = $base64Url.Replace('-', '+').Replace('_', '/')
-        $byte = [System.Convert]::FromBase64String($base64String)
-        $plainText = [System.Text.Encoding]::Default.GetString($byte)
+        $plainText = Convert-Base64ToPlainText $base64String
         return $plainText
     }
 }
