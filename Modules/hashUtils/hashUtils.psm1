@@ -21,7 +21,7 @@ function Get-HashFromString {
     }
 }
 
-function Convert-HexToString {
+function Convert-HexToByteArray {
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$hex
@@ -35,12 +35,13 @@ function Convert-HexToString {
         if ($hex.Length % 2 -ne 0){
             throw "HEX string lenght should be even"
         }
-        $hexList = New-Object System.Collections.ArrayList
-        for($i = 0; $i -lt $hex.Length; $i=$i+2){
-            $hexList.Add($hex.Substring($i, 2)) | Out-Null
+
+        $Bytes = [byte[]]::new($hex.Length / 2)
+        
+        For($i=0; $i -lt $hex.Length; $i+=2){
+            $Bytes[$i/2] = [convert]::ToByte($hex.Substring($i, 2), 16)
         }
-        $chars = $hexList | ForEach-Object {[char][byte]"0x$_"}
-        return $chars -Join ""
+        return $Bytes
     }
 }
 
