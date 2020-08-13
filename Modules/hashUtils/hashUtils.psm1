@@ -21,7 +21,8 @@ function Get-HashFromString {
     }
 }
 
-function Convert-HexToByteArray {
+function Convert-HexToBytes{
+    [OutputType([Microsoft.PowerShell.Commands.ByteCollection])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$hex
@@ -41,7 +42,19 @@ function Convert-HexToByteArray {
         For($i=0; $i -lt $hex.Length; $i+=2){
             $Bytes[$i/2] = [convert]::ToByte($hex.Substring($i, 2), 16)
         }
-        return $Bytes
+        return $bytes
+    }
+}
+
+function Convert-BytesToHexString {
+    [OutputType([String])]
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [Microsoft.PowerShell.Commands.ByteCollection]$bytes,
+        [string]$splitString =''
+    )
+    process {
+        return ($bytes | ForEach-Object ToString X2) -Join $splitString 
     }
 }
 
