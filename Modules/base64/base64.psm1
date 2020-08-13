@@ -26,6 +26,30 @@ function Convert-BytesToBase64 {
     }
 }
 
+function Convert-Base64ToBytes {
+    [OutputType([byte[]])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [string]$str
+    )
+    process {
+        return [System.Convert]::FromBase64String($str)
+    }
+}
+
+# Bytes To Base64Url
+function Convert-BytesToBase64Url {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [byte[]]$bytes
+    )
+    process {
+        $base64string = Convert-BytesToBase64 $bytes
+        $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return $base64Url
+    }
+}
 
 # Base64 To Plane Text 
 function Convert-Base64ToPlainText {
@@ -54,21 +78,6 @@ function Convert-PlainTextToBase64Url {
         return $base64Url
     }
 }
-
-# String To Base64
-function Convert-BytesToBase64Url {
-    [OutputType([String])]
-    param(
-        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
-        [byte[]]$bytes
-    )
-    process {
-        $base64string = Convert-BytesToBase64 $bytes
-        $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        return $base64Url
-    }
-}
-
 
 # Base64 To Plane Text 
 function Convert-Base64UrlToPlainText {
