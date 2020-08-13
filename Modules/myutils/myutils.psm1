@@ -36,9 +36,9 @@ function Test-Command-Enable {
 function Switch-AzureADModule {
     param(
         [Parameter(Mandatory = $false, ValueFromPipeline = $false)]
-        [ValidateSet("AzureAD" , "AzureADPreview")]$version
+        [ValidateSet("AzureAD" , "AzureADPreview")]$moduleName,
+        [string]$version
     )
-    $profilePath = $(Split-Path $PROFILE)
     $azureADModule = Get-Module -Name AzureADPreview
     if (-not $azureADModule) {
         $azureADModule = Get-Module -Name AzureAD
@@ -54,19 +54,31 @@ function Switch-AzureADModule {
         $selectedVersion = "AzureAD"
     }
 
-    if ($version) {
-        $selectedVersion = $version
+    if ($moduleName) {
+        $selectedVersion = $moduleName
     }
 
+    $profilePath = $(Split-Path $PROFILE)
     switch ($selectedVersion) {
         "AzureAD" {
             $modulePath = Join-Path $profilePath "AzureAD"
-            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            if($version){
+                $modulePath = Get-ChildItem $modulePath | Where-Object { $_.Name -eq $version } | Select-Object -First 1
+            }else{
+                # latest version
+                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property [version]Name -Descending | Select-Object -First 1
+            }
             $modulePath = Join-Path $modulePath.FullName "AzureAD.psd1"
         }
         "AzureADPreview" {
             $modulePath = Join-Path $profilePath "AzureADPreview"
-            $modulePath = Get-ChildItem $modulePath | Select-Object -First 1
+            if($version){
+                $modulePath = Get-ChildItem $modulePath | Where-Object { $_.Name -eq $version } | Select-Object -First 1
+            }else{
+                # latest version
+                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property [version]Name -Descending | Select-Object -First 1
+            }
+            
             $modulePath = Join-Path $modulePath.FullName "AzureADPreview.psd1"
         }
         Default { }
@@ -266,6 +278,53 @@ function Start-MyVirtualMachines {
     }
 }
 
+function Stop-MyvirtualMachines {
+    param (
+        [string]$resourceGroup = $env:defaultResourceGroup,
+        [switch]$asJob
+    )
+    process {
+        $startTime = Get-Date
+        Get-Command Connect-AzAccountAsMyServicePrincipal -ea SilentlyContinue | Out-Null
+        try {
+            if ($? -eq $true) {
+                Connect-AzAccountAsMyServicePrincipal
+            }
+            else {
+                Connect-AzAccount
+            }
+        }
+        catch {
+            $_
+            return;
+        }
+        if (-not $(Get-AzResourceGroup -Name $resourceGroup)) {
+            Write-Host "Resource group not found."
+            return
+        }
+        $VMhasLaunched = Get-AzVM -ResourceGroupName $resourceGroup | % { Stop-AzVM -Id $_.Id  -AsJob }
+        if (-not $asJob) {
+            $VMhasLaunched | Wait-Job
+            $totalTime = $($(Get-Date) - $startTime).ToString()
+            Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
+            Write-Host "Virtual Machine has been launched in $totalTime"     
+        }
+        else {
+            Register-ObjectEvent $VMhasLaunched -EventName "StateChanged" -SourceIdentifier JobStateChanged -Action {
+                $totalTime = $($(Get-Date) - $startTime).ToString()
+                Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
+                Write-Host "Virtual Machine has been launched in $totalTime"
+                $global:sender1 = $sender
+                $global:event1 = $Event
+                $global:subscriber = $EventSubscriber
+                $global:source = $SourceEventArgs
+                $global:SourceArgs1 = $SourceArgs
+                Unregister-Event -SourceIdentifier JobStateChanged         
+            }
+        }
+    }
+}
+
 function Remove-EventViewerAllLogs {
     param (
         [switch]$confirm = $true
@@ -279,47 +338,6 @@ function Remove-EventViewerAllLogs {
             }
         }
         Start-Process powershell.exe -ArgumentList '-Command "Remove-Item -Recurse -Force ""C:\ProgramData\Microsoft\Event Viewer\ExternalLogs\*\"""' -Verb runas -WindowStyle Hidden
-    }
-}
-
-function ConvertFrom-CodeVerifier {
-    [OutputType([String])]
-    param(
-        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
-        [String]$codeVerifier,
-        [ValidateSet(
-            "plain",
-            "s256"
-        )]$Method = "s256"
-    )
-    process {
-        switch($Method){
-            "plain" {
-                return $codeVerifier
-            }
-            "s256" {
-                # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/get-filehash?view=powershell-7
-                $stringAsStream = [System.IO.MemoryStream]::new()
-                $writer = [System.IO.StreamWriter]::new($stringAsStream)
-                $writer.write($codeVerifier)
-                $writer.Flush()
-                $stringAsStream.Position = 0
-                $hash = Get-FileHash -InputStream $stringAsStream | Select-Object Hash
-                $hex = $hash.Hash
-        
-                $bytes = [byte[]]::new($hex.Length / 2)
-                    
-                For($i=0; $i -lt $hex.Length; $i+=2){
-                    $bytes[$i/2] = [convert]::ToByte($hex.Substring($i, 2), 16)
-                }
-                $b64enc = [Convert]::ToBase64String($bytes)
-                $b64url = $b64enc.TrimEnd('=').Replace('+', '-').Replace('/', '_')
-                return $b64url     
-            }
-            default {
-                throw "not supported method: $Method"
-            }
-        }
     }
 }
 
