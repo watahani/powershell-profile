@@ -66,7 +66,7 @@ function Switch-AzureADModule {
                 $modulePath = Get-ChildItem $modulePath | Where-Object { $_.Name -eq $version } | Select-Object -First 1
             }else{
                 # latest version
-                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property [version]Name -Descending | Select-Object -First 1
+                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property { [version]$_.Name } -Descending | Select-Object -First 1
             }
             $modulePath = Join-Path $modulePath.FullName "AzureAD.psd1"
         }
@@ -76,7 +76,7 @@ function Switch-AzureADModule {
                 $modulePath = Get-ChildItem $modulePath | Where-Object { $_.Name -eq $version } | Select-Object -First 1
             }else{
                 # latest version
-                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property [version]Name -Descending | Select-Object -First 1
+                $modulePath = Get-ChildItem $modulePath | Sort-Object -Property { [version]$_.Name } -Descending | Select-Object -First 1
             }
             
             $modulePath = Join-Path $modulePath.FullName "AzureADPreview.psd1"
