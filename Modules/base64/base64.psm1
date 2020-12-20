@@ -74,13 +74,23 @@ function Convert-PlainTextToBase64Url {
     )
     process {
         $base64string = Convert-PlainTextToBase64 $plainText
-        $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        return $base64Url
+        return Convert-Base64ToBase64URL $base64string
     }
 }
 
-# Base64 To Plane Text 
-function Convert-Base64UrlToPlainText {
+function Convert-Base64ToBase64URL {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [String]$base64String
+    )
+    process {
+        $base64Url = $base64String.TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        return $base64Url
+    } 
+}
+
+function Convert-Base64URLToBase64 {
     [OutputType([String])]
     param(
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
@@ -93,8 +103,34 @@ function Convert-Base64UrlToPlainText {
             $base64Url = $base64Url + $missingString       
         }
         $base64String = $base64Url.Replace('-', '+').Replace('_', '/')
+        return $base64String
+    }
+}
+
+# Base64URL To Plane Text 
+function Convert-Base64UrlToPlainText {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [String]$base64Url
+    )
+    process {
+        $base64String = Convert-Base64URLToBase64 $base64Url
         $plainText = Convert-Base64ToPlainText $base64String
         return $plainText
+    }
+}
+
+# Base64URL To Bytes 
+function Convert-Base64UrlToByte {
+    [OutputType([String])]
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [String]$base64Url
+    )
+    process {
+        $base64String = Convert-Base64URLToBase64 $base64Url
+        return Convert-Base64ToBytes $base64String
     }
 }
 
