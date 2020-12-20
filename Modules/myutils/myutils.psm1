@@ -19,6 +19,10 @@ function Get-File-Sha1Hashes {
     }
 }
 
+Function Convert-UnixTimeToDate ($UnixTime) { 
+   [timezone]::CurrentTimeZone.ToLocalTime(([datetime]'1/1/1970').AddSeconds($UnixTime))
+}
+
 # Check Command Enable
 function Test-Command-Enable {
     [OutputType([String])]
