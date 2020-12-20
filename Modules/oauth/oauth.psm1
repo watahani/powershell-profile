@@ -76,4 +76,21 @@ function Convert-HashObjectToQueryString {
     }
 }
 
+function ConvertFrom-JWT([string]$rawToken)
+{
+    $parts = $rawToken.Split('.');
+    $headers = Convert-Base64UrlToPlainText $parts[0]
+    $claims = Convert-Base64UrlToPlainText $parts[1]
+    $signature = Convert-Base64UrlToByte $parts[2]
+
+    $customObject = [PSCustomObject]@{
+        headers = ($headers | ConvertFrom-Json)
+        claims = ($claims | ConvertFrom-Json)
+        signature = $signature
+    }
+
+    Write-Verbose -Message ("JWT`r`n.headers: {0}`r`n.claims: {1}`r`n.signature: {2}`r`n" -f $headers,$claims,[System.BitConverter]::ToString($signature))
+    return $customObject
+}
+
 Export-ModuleMember -Function *
