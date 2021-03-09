@@ -23,3 +23,22 @@ Function Get-AADAccessToken(){
         return $accessToken
     }
 }
+
+Function Invoke-AADGetCredentialTypeAPI() {
+    param(
+        [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
+        [String]$UserName
+    )
+    process {
+        $res = Invoke-WebRequest -Uri "https://login.microsoftonline.com/common/GetCredentialType?mkt=ja" `
+        -Method "POST" `
+        -Headers @{
+        "Accept"="application/json"
+        } `
+        -ContentType "application/json; charset=UTF-8" `
+        -Body "{`"username`":`"$UserName`"}"
+
+        $result = ConvertFrom-Json $res.Content
+        return $result
+    }
+}
