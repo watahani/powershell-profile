@@ -345,4 +345,20 @@ function Remove-EventViewerAllLogs {
     }
 }
 
+function Convert-SafelinkToOriginLink {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [string]$Url,
+        [string]$PramName = "url"
+    )
+    process {
+        $SplitedUrl = $Url.Split("?")
+        if ($SplitedUrl.Count -ne 2) {
+            throw "Input URL does not contain '?' or contains multipul '?'"
+        }
+        $Queries = [System.Web.HttpUtility]::ParseQueryString($SplitedUrl[1])
+        return $Queries.Get($PramName);
+    }
+}
+
 Export-ModuleMember -Function *
