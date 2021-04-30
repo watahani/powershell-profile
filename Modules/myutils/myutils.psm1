@@ -354,7 +354,7 @@ function Convert-SafelinkToOriginLink {
     process {
         $SplitedUrl = $Url.Split("?")
         if ($SplitedUrl.Count -ne 2) {
-            throw "Input URL does not contain '?' or contains multipul '?'"
+            throw "Input URL does not contain query prameter or contains multipul '?'"
         }
         $Queries = [System.Web.HttpUtility]::ParseQueryString($SplitedUrl[1])
         return $Queries.Get($PramName);
