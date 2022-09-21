@@ -25,13 +25,18 @@ function Convert-HexToBytes{
     [OutputType([Microsoft.PowerShell.Commands.ByteCollection])]
     param (
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string]$hex
+        [string]$hex,
+        [string]$splitString
     )
     process {
         $hex = $hex.Trim()
-        $splitStrings = @(":", " ")
-        foreach ($s in $splitStrings) {
-            $hex = $hex.replace($s,"")
+        if ($splitString) {
+            $hex = $hex.replace($splitString)
+        } else {
+            $splitStrings = @(":", " ")
+            foreach ($s in $splitStrings) {
+                $hex = $hex.replace($s,"")
+            }
         }
         if ($hex.Length % 2 -ne 0){
             throw "HEX string lenght should be even"
