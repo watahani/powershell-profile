@@ -205,7 +205,7 @@ function Set-MyVirtualVmSize {
         else {
             Connect-AzAccount
         }
-
+        
         if (-not $rgName) {
             $rgName = Read-Host "Please type resource group name"
         }
@@ -255,11 +255,33 @@ function Start-MyVirtualMachines {
             $_
             return;
         }
+
+        Get-Command Add-GlobalIPToNSG -ea SilentlyContinue | Out-Null
+        try {
+            if ($? -eq $true) {
+                Add-GlobalIPToNSG
+            }
+        }
+        catch {
+            $_
+            return;
+        }
+
         if (-not $(Get-AzResourceGroup -Name $resourceGroup)) {
             Write-Host "Resource group not found."
             return
         }
-        $VMhasLaunched = Get-AzVM -ResourceGroupName $resourceGroup | % { Start-AzVM -Id $_.Id  -AsJob }
+        $vm = Get-AzVM -ResourceGroupName $resourceGroup
+        $dc = $vm | ?{ $_.Name -like "*-dc" }
+        $Jobs = @();
+        if($dc)
+        {
+            Write-Host "Starting DC VM"
+            $Jobs += $dc | Start-AzVM -AsJob
+            # waiting for DC VM to start
+            Start-Sleep 10;
+        }
+        $Jobs += Get-AzVM -ResourceGroupName $resourceGroup | ?{ $_.Name -notlike "*-dc"} | % { Start-AzVM -Id $_.Id  -AsJob }
         if (-not $asJob) {
             $VMhasLaunched | Wait-Job
             $totalTime = $($(Get-Date) - $startTime).ToString()
@@ -310,14 +332,14 @@ function Stop-MyvirtualMachines {
         if (-not $asJob) {
             $VMhasLaunched | Wait-Job
             $totalTime = $($(Get-Date) - $startTime).ToString()
-            Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
-            Write-Host "Virtual Machine has been launched in $totalTime"     
+            Write-Host "Virtual Machine has been stooped in $totalTime" | Show-Tooltip
+            Write-Host "Virtual Machine has been stooped in $totalTime"     
         }
         else {
             Register-ObjectEvent $VMhasLaunched -EventName "StateChanged" -SourceIdentifier JobStateChanged -Action {
                 $totalTime = $($(Get-Date) - $startTime).ToString()
-                Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
-                Write-Host "Virtual Machine has been launched in $totalTime"
+                Write-Host "Virtual Machine has been stooped in $totalTime" | Show-Tooltip
+                Write-Host "Virtual Machine has been stooped in $totalTime"
                 $global:sender1 = $sender
                 $global:event1 = $Event
                 $global:subscriber = $EventSubscriber
