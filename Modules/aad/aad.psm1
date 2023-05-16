@@ -58,11 +58,12 @@ Function Convert-TenantNameToGuid() {
 Function Get-TenantInfoFromGuid() {
     param(
         [Parameter(Mandatory= $True, ValueFromPipeline = $True)]
-        [String]$TenantName
+        [String]$TenantId
     )
     process {
-        Connect-MgGraph -ClientId $env:TENANT_INFO_APPID -TenantId $env:TENANT_INFO_TENANT_ID -CertificateThumbprint $env:TENANT_INFO_CERT_THUMBPRINT -ContextScope Process
-        $res = Invoke-GraphRequest -Method GET -Uri "/tenantRelationships/findTenantInformationByTenantId(tenantId='$tenantId')"
+        # need API Permission: CrossTenantInformation.ReadBasic.All
+        Connect-MgGraph -ClientId $env:TENANT_INFO_APPID -TenantId $env:TENANT_INFO_TENANT_ID -CertificateThumbprint $env:TENANT_INFO_CERT_THUMBPRINT -ContextScope Process | Out-Null
+        $res = Invoke-GraphRequest -Method GET -Uri "/beta/tenantRelationships/findTenantInformationByTenantId(tenantId='$tenantId')"
         return $res;
     }
 }
