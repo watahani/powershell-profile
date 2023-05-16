@@ -3,3 +3,5 @@ AzureADPreview
 Modules/private_utils/
 AzModules
 AzureRMModules
+Modules/Microsoft.*/
+Modules/PackageManagement/
