@@ -42,3 +42,27 @@ Function Invoke-AADGetCredentialTypeAPI() {
         return $result
     }
 }
+
+Function Convert-TenantNameToGuid() {
+    param(
+        [Parameter(Mandatory= $True, ValueFromPipeline = $True)]
+        [String]$TenantName
+    )
+    process {
+        $res = Invoke-RestMethod -Method GET -Uri "https://login.microsoftonline.com/$TenantName/.well-known/openid-configuration" -UseBasicParsing
+        $tenantId = $res.authorization_endpoint.Split('/')[3]
+        return $tenantId
+    }
+}
+
+Function Get-TenantInfoFromGuid() {
+    param(
+        [Parameter(Mandatory= $True, ValueFromPipeline = $True)]
+        [String]$TenantName
+    )
+    process {
+        Connect-MgGraph -ClientId $env:TENANT_INFO_APPID -TenantId $env:TENANT_INFO_TENANT_ID -CertificateThumbprint $env:TENANT_INFO_CERT_THUMBPRINT -ContextScope Process
+        $res = Invoke-GraphRequest -Method GET -Uri "/tenantRelationships/findTenantInformationByTenantId(tenantId='$tenantId')"
+        return $res;
+    }
+}
