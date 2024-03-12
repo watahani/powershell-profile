@@ -43,7 +43,8 @@ if(Test-IsAdministrator)
 {
     iwr -useb get.scoop.sh | iex
 }
-scoop install git 7zip python azure-cli curl jq -g
+scoop install git
+scoop install 7zip python azure-cli curl jq -g
 scoop bucket add extras
 scoop install chromium firefox -g
 
