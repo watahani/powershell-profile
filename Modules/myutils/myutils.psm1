@@ -138,7 +138,7 @@ function Show-Tooltip {
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string]$body, 
         [int]$timeout = 1, 
-        [string]$tilte = "notify", 
+        [string]$title = "notify", 
         [ValidateSet("Error", "Info", "None", "Warning")]$toolTipIcon = "Info"
     )
     process {
@@ -148,7 +148,7 @@ function Show-Tooltip {
         $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($powerShellExe)
         $notifyIcon.Icon = $icon
         $notifyIcon.Visible = $true
-        $notifyIcon.ShowBalloonTip($timeout, $tilte, $body, $toolTipIcon)        
+        $notifyIcon.ShowBalloonTip($timeout, $title, $body, $toolTipIcon)        
     }
 }
 
@@ -239,6 +239,17 @@ function Start-MyVirtualMachines {
     param (
         [string]$resourceGroup = $env:defaultResourceGroup,
         [switch]$asJob
+        <#
+            .SYNOPSIS
+            Start Azure Virtual Machines
+
+            .Parameter resourceGroup
+            Resource group name of Azure VMs to start. All Azure VM in the resource group will be started.
+            If VM name contain "-dc", it will be started first.
+
+            .Parameter asJob
+            Start Azure VMs as job. If this parameter is specified, this function will return job object.
+        #>
     )
     process {
         $startTime = Get-Date
@@ -259,7 +270,7 @@ function Start-MyVirtualMachines {
         Get-Command Add-GlobalIPToNSG -ea SilentlyContinue | Out-Null
         try {
             if ($? -eq $true) {
-                Add-GlobalIPToNSG
+                Add-GlobalIPToNSG -nsgResourceGroup $resourceGroup
             }
         }
         catch {
@@ -277,13 +288,13 @@ function Start-MyVirtualMachines {
         if($dc)
         {
             Write-Host "Starting DC VM"
-            $Jobs += $dc | Start-AzVM -AsJob
+            $Jobs += $dc | %{ Start-AzVM -Id $_.Id -AsJob }
             # waiting for DC VM to start
-            Start-Sleep 10;
+            Start-Sleep 60;
         }
-        $Jobs += Get-AzVM -ResourceGroupName $resourceGroup | ?{ $_.Name -notlike "*-dc"} | % { Start-AzVM -Id $_.Id  -AsJob }
+        $Jobs += $vm | ?{ $_.Name -notlike "*-dc"} | % { Start-AzVM -Id $_.Id  -AsJob }
         if (-not $asJob) {
-            $VMhasLaunched | Wait-Job
+            $Jobs | Wait-Job
             $totalTime = $($(Get-Date) - $startTime).ToString()
             Write-Host "Virtual Machine has been launched in $totalTime" | Show-Tooltip
             Write-Host "Virtual Machine has been launched in $totalTime"     
